@@ -1,0 +1,168 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 27 10:19:26 2018
+
+@author: Asus
+"""
+## 程序的目的是学习python中类的更深入的用法：关于私有属性，共有属性等
+class Person:
+    """人员信息"""
+    # 姓名（共有属性）
+    name = ''
+    # 年龄（共有属性）
+    age = 0
+    有用 = 'abababaa'
+    没用 = 10
+    def __init__(self,name='',age=0):
+        self.name = name
+        self.age = age
+    # 重载专有方法:__str__
+    @classmethod 
+    def seg(string,PP=有用):
+        return string.没用+len(PP)
+    def __str__(self):
+        return "这里重载了 __str__ 专有方法，" + str({'name':self.name,'age':self.age})
+    def set_age(self,age):
+        self.age = age
+        
+class Account:
+    """账户信息"""
+    # 账户余额(私有属性)
+    __balance = 0
+    # 所有账户总额
+    __total_balance = 0
+    
+    # 获取账户余额
+    # self 必须是方法的第一个参数
+    def balance(self):
+        return self.__balance
+    # 增加账户余额
+    def balance_add(self,cost):
+        # self 访问的是本实例
+        self.__balance += cost
+        # self.__class__ 可以访问类
+        
+    # 类方法（用 @classmethod 标识，第一个参数为 cls）
+    @classmethod
+    def total_balance(cls):
+        return cls.__total_balance
+    # 静态方法(用 @staticmethod 标识,不需要类参数或实例参数)
+    @staticmethod
+    def exchange(a,b):
+        return b,a
+    
+class Teacher(Person,Account):
+    """教师"""
+    # 班级名称
+    _class_name = ''
+    
+    def __init__(self,name):
+        # 第一种重载父类__init__()构造方法
+        # super(子类,self).__init__(参数1,参数2,...)
+        super(Teacher,self).__init__(name)
+    
+    def get_info(self):
+        # 以字典的形式返回个人信息
+        return {'name':self.name,  # 此处访问的是父类Person的属性值
+                'age':self.age,
+                'class_name':self._class_name,
+                'balance':self.balance()}  # 此处调用的是子类重载过的方法
+    # 方法重载
+    def balance(self):
+        # Account.__balance 为私有属性，子类无法访问，所以父类提供方法进行访问
+        return Account.balance(self)*1.1
+    
+class Student(Person,Account):
+   """学生"""
+   _teacher_name = ''
+   
+   def __inint__(self,name,age=18):
+       # 第二种重载父类__init__()构造方法
+       # 父类名称.__init__(self,参数1,参数2,...)
+       Person.__init__(self,name,age)
+   
+   def get_info(self):
+       # 以字典的形式返回个人信息
+       return {'name':self.name,
+               'age':self.age,
+               'teacher_name':self._teacher_name,
+               'balance':self.balance()}
+
+# =================== 执行 ================== #
+# 教师 John
+john = Teacher('John')
+john.balance_add(20)
+john.set_age(36)  # 子类的实例可以直接调用父类的方法
+print("John's info:",john.get_info())
+
+# 学生Mary
+mary = Student('Mary',18)
+mary.balance_add(18)
+print("Mary's info:",mary.get_info())
+
+# 学生Fake
+fake = Student('Fake')
+fake.balance_add(30)
+print("Fake's info:",fake.get_info())
+
+# 三种不同的方式调用静态方法
+print("john.exchange('a','b'):",john.exchange('a','b'))
+print("Teacher.exchange(1,2):",Teacher.exchange(1,2))
+print("Account.exchange(10,20):",Account.exchange(10,20))
+
+# 类方法，类属性
+print("Account.total_balance():",Account.total_balance())
+print("Teacher.total_balance():",Teacher.total_balance())
+print("Student.total_balance():",Student.total_balance())
+
+# 重载专有方法
+print(fake)
+        
+"""类的注解
+类的专有方法：
+    __init__:构造函数，在生成对象时调用
+    __del__:析构函数，在释放对象时使用
+    __repr__:打印,转换
+    __setitem__:按照索引赋值
+    __getitem__:按照索引获取值
+    __len__:获得长度
+    __cmp__:比较运算
+    __call__:函数调用
+    __add__:加运算
+    __mul__:乘运算
+    __sub__:减运算
+    __div__:除运算
+    __mod__:求余运算
+    __pow__:乘方运算
+类的继承：
+    类可以继承,并且支持继承多个父类。
+    在定义类时，类名后的括号中指定要继承的父类，多个父类之间用逗号分隔。
+    子类的实例可以完全访问所继承所有父类的非私有属性和方法。
+    若是父类中有相同的方法名，而在子类使用时未指定，Python从左至右搜索，即方法在子类中未找到时，
+从左到右查找父类中是否包含方法。
+方法重写：
+    子类的方法可以重写父类的方法。
+    重写的方法参数不强制要求保持一致，不过合理的设计都应该保持一致。
+    super()函数可以调用父类的一个方法，以多继承问题。
+访问控制：
+    私有属性：__private_attr:两个下划线开头，声明该属性为私有，不能在类地外部被使用或直接访问。
+    私有方法：__private_method:两个下划线开头，声明该方法为私有方法，只能在类的内部调用，不能
+在类地外部调用
+    受保护的属性或方法：一个下滑线开头的属性或方法，比如_protected_attr,_protected_method
+变量：
+    类变量（Class Variable）是共享的————它们可以被属于该类的所有实例访问。
+    该类变量只有一个副本，当任何一个对象对类变量作出改变时，发生的变动将在其它所有的实例中体现。
+    对象变量(Object Variable)由类的每一个独立的对象或实例所拥有，在这种情况下，每一个对象都拥有
+属于它自己的字段的副本。它们不会被共享，也不会以任何方式与其它不同实例中的相同名称的字段产生关系。
+类方法：
+    装饰器 @classmethod 可以将方法标识为类方法。
+    类方法第一个参数必须为cls，而不再是self
+静态方法：
+    装饰器 @staticmethod 可以将方法标识为静态方法。
+    静态方法的第一个参数不再指定，也就不需要self或cls
+__init__方法：
+    __init__方法即构造方法，会在类的对象被实例化时先运行，可以将初始化的操作放置到该方法中。
+    如果重写__init__方法，实例化的子类就不会调用父类已经定义的__init__。
+对象方法:
+    方法有def关键字定义，与函数不同的是：方法必须包含参数self，且为第一个参数，self代表的是本类的实例。
+"""
